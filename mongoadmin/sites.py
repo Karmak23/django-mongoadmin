@@ -1,3 +1,6 @@
+
+import logging
+
 from django import http, template
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.forms import AdminAuthenticationForm
@@ -24,6 +27,8 @@ from mongoadmin.util import is_django_user_model
 from mongoadmin.contenttypes import views as contenttype_views
 
 LOGIN_FORM_KEY = 'this_is_the_login_form'
+LOGGER = logging.getLogger(__name__)
+
 
 class AdminSite(object):
     """
@@ -107,8 +112,12 @@ class AdminSite(object):
                 options['__module__'] = __name__
                 admin_class = type("%sAdmin" % model.__name__, (admin_class,), options)
 
-            # Validate (which might be a no-op)
-            validate(admin_class, model)
+            try:
+                # Validate (which might be a no-op)
+                validate(admin_class, model)
+            except:
+                LOGGER.exception(u'Validation failed for model %s '
+                                 u'(admin class %s)', model, admin_class)
 
             # Instantiate the admin class to save in the registry
             self._registry[model] = admin_class(model, self)
